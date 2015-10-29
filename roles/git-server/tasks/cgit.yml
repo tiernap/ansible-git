@@ -1,0 +1,57 @@
+## Following is cgit web frontend for git
+
+#include apache
+- include: apache.yml
+
+- name: install packages
+  apt: name={{item}} state=present update-cache=yes cache_valid_time=3600
+  with_items:
+    - unzip
+    - libssl-dev
+
+- name: check cgit version installed
+  stat: path=/home/{{ ansible_env.SUDO_USER }}/cgit-{{ cgit_version }}
+  register: result
+
+- name: Download cgit
+  get_url: url=http://git.zx2c4.com/cgit/snapshot/cgit-{{ cgit_version }}.zip dest=/tmp/cgit-{{ cgit_version }}.zip
+  sudo: no
+  when: result.stat.isdir is not defined 
+  
+- name: unarchive cgit
+  unarchive: src=/tmp/cgit-{{ cgit_version }}.zip dest=/home/{{ ansible_env.SUDO_USER }}/ copy=no
+  sudo: no
+  when: result.stat.isdir is not defined
+
+- name: make get-git
+  command: make get-git chdir=/home/{{ ansible_env.SUDO_USER }}/cgit-{{ cgit_version }}
+  sudo: no
+  when: result.stat.isdir is not defined
+  
+- name: make
+  command: make chdir=/home/{{ ansible_env.SUDO_USER }}/cgit-{{ cgit_version }}
+  when: result.stat.isdir is not defined
+  
+- name: Install cgit
+  command: make install chdir=/home/{{ ansible_env.SUDO_USER }}/cgit-{{ cgit_version }}
+  when: result.stat.isdir is not defined
+  
+- name: configure cgit
+  template: src=cgitrc dest=/etc/cgitrc
+  notify: restart apache2
+  
+- name: configure cgit apache site
+  template: src=cgit.apache.conf dest=/etc/apache2/sites-available/cgit.conf
+  notify: restart apache2
+
+- name: enable cgi apache mod
+  apache2_module: state=present name=cgi
+
+- name: disable apache default site
+  command: a2dissite 000-default removes=/etc/apache2/sites-enabled/000-default.conf
+ 
+- name: enable apache cgit site
+  command: a2ensite cgit creates=/etc/apache2/sites-enabled/cgit.conf 
+
+  
+

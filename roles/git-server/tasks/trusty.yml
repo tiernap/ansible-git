@@ -1,0 +1,88 @@
+---
+- name: create git user
+  user: 
+    name=git 
+    comment="git version control" 
+    system=yes 
+    shell=/bin/bash 
+    state=present
+    createhome=yes
+    generate_ssh_key=yes
+    ssh_key_bits=4096
+    ssh_key_type=rsa
+    ssh_key_comment="Gitolite Service"
+  
+- name: install packages
+  apt: name={{ item }} state=present
+  with_items:
+    - git-core
+    - gitolite
+
+- name: configure ssh
+  copy: src=ssh_config dest=/home/git/.ssh/config mode=0600 owner=git group=git
+
+- name: configure git
+  template: src=gitconfig dest=/home/git/.gitconfig mode=0600 owner=git group=git
+
+- name: Configure gitolite
+  template: src=gitolite.rc dest=/home/git/.gitolite.rc mode=0640 owner=git group=git
+
+- name: check for gitolite repo clone
+  stat: path=/home/git/gitolite-admin/conf/gitolite.conf
+  register: result
+  ignore_errors: true
+
+- name: Initialize gitolite
+  when: not result.stat.exists
+  sudo: yes
+  sudo_user: git
+  command: gl-setup /home/git/.ssh/id_rsa.pub chdir=/home/git creates=/home/git/.gitolite
+  
+- name: Clone Gitolite-admin repo
+  when: not result.stat.exists
+  sudo: yes
+  sudo_user: git
+  git: force=yes accept_hostkey=yes repo=git@localhost:gitolite-admin.git remote=origin dest=/home/git/gitolite-admin
+
+- name: configure gitolite.conf
+  when: not result.stat.exists
+  register: gitolite_install_gitolite_conf
+  template: src=gitolite.conf dest=/home/git/gitolite-admin/conf/gitolite.conf mode=0640 owner=git group=git
+  
+- name: Deliver ssh keys to gitolite
+  when: not result.stat.exists
+  register: gitolite_install_gitolite_ssh_user_accounts
+  copy: src={{ item }} dest=/home/git/gitolite-admin/keydir/{{ gitolite_username }}.pub mode=0640 owner=git group=git
+  with_first_found:
+    - "./keys/{{ gitolite_username }}.pub"
+    - "~/.ssh/id_rsa.pub"
+  ignore_errors: true  
+
+- name: git add gitolite-admin
+  when: not result.stat.exists
+  register: gitolite_git_add_gitolite_admin
+  sudo: yes
+  sudo_user: git
+  command: git add --all chdir=/home/git/gitolite-admin
+
+- name: git commit gitolite-admin
+#  when: gitolite_git_add_gitolite_admin.changed
+  when: not result.stat.exists
+  register: gitolite_git_commit_gitolite_admin
+  sudo: yes
+  sudo_user: git
+  command: git commit -m 'First commit to bootstrap gitolite-admin with user key, by Ansible' chdir=/home/git/gitolite-admin
+
+- name: git push gitolite-admin
+  when: not result.stat.exists
+#  when: gitolite_git_commit_gitolite_admin.changed
+  sudo: yes
+  sudo_user: git
+  command: git push --set-upstream origin master chdir=/home/git/gitolite-admin
+
+## Include cgit web frontend
+- include: cgit.yml
+
+  
+  
+

@@ -1,0 +1,13 @@
+---
+
+## Gitolite vars
+# Note: gitolite_username is the git username for the admin(bootstrapped) user. this username must corrispond with the public key in ./files folder (<gitolite_username>.pub)
+gitolite_username: vagrant
+gitolite_gitconfig_user_name: 'Git Service'
+gitolite_gitconfig_user_email: "git@localhost.localdomain"
+gitolite_gitconfig_push_default: current
+
+## cgit vars
+cgit_version: 0.11.2
+cgit_title: "Vagrant Git Repository"
+cgit_subtitle: "a web interface to {{ ansible_fqdn }} repositories"

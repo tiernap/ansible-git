@@ -1,0 +1,7 @@
+# order matters!
+---
+- hosts: git_server
+#  remote_user: "{{ remote_user_name }}"
+  sudo: True
+  roles:
+    - git-server

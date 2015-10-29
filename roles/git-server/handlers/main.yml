@@ -1,0 +1,5 @@
+- name: reload gitolite
+  action: service name=gitolite state=restarted
+
+- name: restart apache2
+  action: service name=apache2 state=restarted
