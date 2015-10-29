@@ -3,7 +3,7 @@
 ## Gitolite vars
 # Note: gitolite_username is the git username for the admin(bootstrapped) user. this username must corrispond with the public key in ./files folder (<gitolite_username>.pub)
 gitolite_username: vagrant
-gitolite_gitconfig_user_name: 'Git Service'
+gitolite_gitconfig_user_name: "Git Service"
 gitolite_gitconfig_user_email: "git@localhost.localdomain"
 gitolite_gitconfig_push_default: current
 
