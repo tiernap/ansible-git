@@ -3,7 +3,7 @@ Ansible deployment of git server with gitolite authentication and cgit web inter
 
 ## Description
 
-This role deploys a git repository server with gitolite for authentication and management of repositories. Also cgit web frontend for navigation/viewing repositories.
+This role deploys a git repository server with gitolite for repo management and cgit web frontend for navigation/viewing of repos.
 
 ## To create in vagrant:
 Vagrant uses "hostmanager" plugin. Before running, install with: vagrant plugin install vagrant-hostmanager
